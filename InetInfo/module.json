@@ -1,0 +1,12 @@
+{
+    "id": "{97299E72-F2EF-1EA8-3CE8-CBFF13D37FA7}",
+    "name": "NetInfo",
+    "type": 3,
+    "vendor": "API",
+    "aliases": [],
+    "parentRequirements": [],
+    "childRequirements": [],
+    "implemented": [],
+    "prefix": "NETINFO",
+    "url": ""
+}
