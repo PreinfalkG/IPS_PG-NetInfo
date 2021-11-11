@@ -21,6 +21,16 @@
                 { "name": "ipStack_accessKey", "type": "ValidationTextBox", "caption": "Access Key" }
             ]
         },
+        {
+            "type": "ExpansionPanel",
+            "caption": "macaddress.io",
+            "expanded": true,
+            "visible": true,
+            "items": [
+                { "name": "macAddress_EnableAPI", "type": "CheckBox", "caption": "Enable 'macaddress.io' API Requests" },
+                { "name": "macAddress_accessKey", "type": "ValidationTextBox", "caption": "Access Key" }
+            ]
+        },        
 
         { "name": "LogLevel", "type": "Select", "caption": "Debug/Log Level",
             "options": [

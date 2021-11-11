@@ -51,6 +51,14 @@ https://countrylayer.com/          :: Reliable real-time country data API for yo
 https://languagelayer.com/         :: Powerful Language Detection JSON API for Developers
 
 
+### 1c. macaddress.io :: Funktionsumfang
+
+
+http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57
+http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57&format=json
+
+
+
 ### 2. Vorraussetzungen
 
 - IP-Symcon ab Version 5.5
