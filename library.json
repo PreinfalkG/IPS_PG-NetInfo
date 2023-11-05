@@ -1,10 +1,10 @@
 {
     "id": "{D4AAC276-97DB-E833-6C3A-A5B908436016}",
-    "name": "Network Infos",
-    "author": "Preinfalk Günter",
+    "name": "Network Tools and Infos",
+    "author": "PreinfalkG",
     "url": "",
     "compatibility": {
-        "version": "5.5"
+        "version": "6.4"
     },
     "version": "0.90",
     "build": 1,

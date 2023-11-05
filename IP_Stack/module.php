@@ -1,21 +1,20 @@
 <?php
 declare(strict_types=1);
 
-// Modul NetInfo | prefix: "NETINFO"
+// Modul IP Stack | "prefix": "IPSTACK"
 
 require_once __DIR__ . '/../libs/COMMON.php'; 
 require_once __DIR__ . '/../libs/SleekDB/SleekDB.php'; 
 
-	class NetInfo extends IPSModule {
+	class IPStack extends IPSModule
+	{
 
-		const IPINFO_API_URL_TEMPLATE = 	"https://ipinfo.io/%%IP%%?token=%%TOKEN%%";
-		const IPSTACK_API_URL_TEMPLATE = 	"http://api.ipstack.com/%%IP%%?access_key=%%accessKey%%";
-		const MACADDRESS_API_URL_TEMPLATE = "https://api.macaddress.io/v1?apiKey=%%apiKey%%&output=json&search=%%mac%%";
-		const WEB_HOOK = "/hook/NetInfo";	// >> http://127.0.0.1:3777/hook/NetInfo
+		const API_URL_TEMPLATE = "http://api.ipstack.com/%%IP%%?access_key=%%accessKey%%";
+		const WEB_HOOK = "/hook/NetIpStack";		// >> http://127.0.0.1:3777/hook/NetIpStack
 
 		private $logLevel = 3;
 		private $logCnt = 0;
-		private $enableIPSLogOutput = false;
+		private $enableIPSLogOutput = false;		
 
 		private $sleekDbDir;
 		private $sleekDbConfig;
@@ -24,12 +23,13 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 		public function __construct($InstanceID) {
 		
 			parent::__construct($InstanceID);		// Diese Zeile nicht löschen
-		
+
 			$this->logLevel = @$this->ReadPropertyInteger("LogLevel"); 
 			if($this->logLevel >= LogLevel::TRACE) { $this->AddLog(__FUNCTION__, sprintf("Log-Level is %d", $this->logLevel)); }
 
 			$this->sleekDbDir = IPS_GetLogDir()."SleekDB";
 			$this->sleekDbConfig = ["auto_cache" => true, "cache_lifetime" => null, "timeout" => false, "primary_key" => "_id", "search" => [ "min_length" => 2, "mode" => "or", "score_key" => "scoreKey"]];
+			$this->sleekDBStore = \SleekDB\SleekDB::store('CacheIPStack', $this->sleekDbDir, $this->sleekDbConfig);
 		}
 
 
@@ -47,23 +47,11 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 
 			$hostname = gethostname();
 			if(strpos($hostname, "ADW20") !== false) {
-				$this->RegisterPropertyBoolean('ipInfo_EnableAPI', true);
-				$this->RegisterPropertyString('ipInfo_apiToken', "2600264f74a47a");	
-	
-				$this->RegisterPropertyBoolean('ipStack_EnableAPI', true);
-				$this->RegisterPropertyString('ipStack_accessKey', "d927aadacc55aaa0770785bb9195f31c");	
-	
-				$this->RegisterPropertyBoolean('macAddress_EnableAPI', true);
-				$this->RegisterPropertyString('macAddress_accessKey', "at_8pSPwjVt5ZFUPdpDkAqQK4Thdzhpk");	
+				$this->RegisterPropertyBoolean('EnableAPI', true);
+				$this->RegisterPropertyString('access_key', "d927aadacc55aaa0770785bb9195f31c");
 			} else {
-				$this->RegisterPropertyBoolean('ipInfo_EnableAPI', false);
-				$this->RegisterPropertyString('ipInfo_apiToken', "");	
-	
-				$this->RegisterPropertyBoolean('ipStack_EnableAPI', false);
-				$this->RegisterPropertyString('ipStack_accessKey', "");	
-	
-				$this->RegisterPropertyBoolean('macAddress_EnableAPI', false);
-				$this->RegisterPropertyString('macAddress_accessKey', "");	
+				$this->RegisterPropertyBoolean('EnableAPI', true);
+				$this->RegisterPropertyString('access_key', "d927aadacc55aaa0770785bb9195f31c");
 			}
 
 			$this->RegisterPropertyInteger('LogLevel', 3);
@@ -89,12 +77,12 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			parent::Destroy();						//Never delete this line!
 		}
 
-		public function ApplyChanges()	{
+		public function ApplyChanges() {
 
 			parent::ApplyChanges(); //Never delete this line!
 
 			$this->logLevel = $this->ReadPropertyInteger("LogLevel");
-			if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Set Log-Level to %d", $this->logLevel), 0); }
+			if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Set Log-Level to %d", $this->logLevel)); }
 
 			$this->RegisterProfiles();
 			$this->RegisterVariables();  
@@ -113,122 +101,8 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 
 			parent::MessageSink($TimeStamp, $SenderID, $Message, $Data);
 			if ($Message == IPS_KERNELMESSAGE && $Data[0] == KR_READY) 	{
-					if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("RegisterHook '%s'", self::WEB_HOOK)); }
 					$this->RegisterHook(self::WEB_HOOK);
-			}	
-		}
-
-
-		public function GetIPInfo(string $ipAddress) {
-
-			$startTime = microtime(true);
-			SetValue($this->GetIDForIdent("requestCnt"), GetValue($this->GetIDForIdent("requestCnt")) + 1); 
-
-			$this->sleekDBStore = \SleekDB\SleekDB::store('CacheIPInfo', $this->sleekDbDir, $this->sleekDbConfig);
-			$ipInfoArr = $this->sleekDBStore->findOneBy(["ip", "=", $ipAddress]);
-
-			if(is_null($ipInfoArr)) {
-
-				$specificIpAddress = false;
-				if(strpos($ipAddress,"10.") === 0) {  
-					$specificIpAddress = true; 
-					$usage = "IPv4 private Address";
-				} else if (strpos($ipAddress,"172.") === 0) { 
-					$specificIpAddress = true; 
-					$usage = "IPv4 private Address";
-				} else if (strpos($ipAddress,"192.") === 0) { 
-					$specificIpAddress = true; 
-					$usage = "IPv4 private Address";
-				} else if (strpos($ipAddress,"224.") === 0) { 
-					$specificIpAddress = true; 
-					$usage = "IPv4 multicast address";
-				} else if (strpos($ipAddress,"255.") === 0) { 
-					$specificIpAddress = true; 
-					$usage = "IPv4 Broadcast address";
-				} else if (strpos($ipAddress,"0.0.0.0") === 0) { 
-					$specificIpAddress = true; 
-					$usage = "IPv4 0.0.0.0";
-				}							
-
-				if($specificIpAddress) {
-					$ipInfoArr["ip"] = $ipAddress;
-					$ipInfoArr["hostname"] = "n.a.";
-					$ipInfoArr["anycast"] = "n.a.";
-					$ipInfoArr["city"] = "n.a.";
-					$ipInfoArr["region"] = "n.a.";
-					$ipInfoArr["country"] = $usage;
-					$ipInfoArr["loc"] = "n.a.";
-					$ipInfoArr["org"] = "n.a.";
-					$ipInfoArr["postal"] = "n.a.";
-					$ipInfoArr["timezone"] = "n.a.";
-					$ipInfoArr["TimeStamp"] = time();
-					$ipInfoArr["DateTime"] = date('d.m.Y H:i:s',time());
-					$ipInfoArr = $this->sleekDBStore->insert($ipInfoArr);
-					$ipInfoArr["source"] = "API";
-
-				} else {
-
-					if($this->ReadPropertyBoolean("ipInfo_EnableAPI")) {
-						if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' not in Cache > Init 'ipinfo.io' API request ...", $ipAddress), 0); }
-						$apiUrl = self::IPINFO_API_URL_TEMPLATE;
-						$apiUrl = str_replace("%%IP%%", $ipAddress, $apiUrl);
-						$apiUrl = str_replace("%%TOKEN%%",  $this->ReadPropertyString("ipInfo_apiToken"), $apiUrl);
-						$ipInfoJson = $this->RequestJsonData($apiUrl);
-						$ipInfoArr = json_decode($ipInfoJson, true);
-						$ipInfoArr["TimeStamp"] = time();
-						$ipInfoArr["DateTime"] = date('d.m.Y H:i:s',time());
-						$ipInfoArr = $this->sleekDBStore->insert($ipInfoArr);
-						$ipInfoArr["source"] = "API";
-						SetValue($this->GetIDForIdent("requestCntAPI"), GetValue($this->GetIDForIdent("requestCntAPI")) + 1); 
-					} else {
-						$logMsg = "API calls are disabled. #Enable ipinfo.io API Requests# in Modul Settings";
-						$this->AddLog(__FUNCTION__, "WARN :: " . $logMsg, 0, true);
-						die(json_encode(array('WARN' => $logMsg)));
-					}
-				}
-			} else {
-				if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' found in Cache > return cached data ...", $ipAddress), 0); }
-				$ipInfoArr["source"] = "DbCache";
-				SetValue($this->GetIDForIdent("requestCntCache"), GetValue($this->GetIDForIdent("requestCntCache")) + 1); 
 			}
-
-			$ipInfoArr["duration_ms"] = $this->CalcDuration_ms($startTime);
-			return $ipInfoArr;
-		}
-
-		public function GetIPInfoAsString(string $ipAddress, string $format, string $delimiter) {
-			$ipInfoArr = $this->GetIPInfo($ipAddress);
-			$ipInfoStr = $delimiter;
-			if(($format == "ALL") or ($format =="")) {
-				$ipInfoStr = $this->mapped_implode($delimiter, $ipInfoArr, ': ');
-			} else if($format == "json") {
-					$ipInfoStr = json_encode($ipInfoArr);
-			} else {
-				if($format == "ValueOnly") {
-					$ipInfoStr = implode($delimiter, $ipInfoArr);
-				} else {
-					$formatArr = explode(',', $format);
-					if(is_array($formatArr)) {
-						$whithKeys = !in_array("ValueOnly", $formatArr);
-						foreach($formatArr as $key) {
-							if(array_key_exists($key, $ipInfoArr)) {
-								//$ipInfoStr .= $key . ": " . $formatArr[$key] . " | ";
-								if($whithKeys) {
-									$ipInfoStr .= sprintf("%s: %s%s", $key, $ipInfoArr[$key], $delimiter);
-								} else {
-									$ipInfoStr .= sprintf("%s%s", $ipInfoArr[$key], $delimiter);
-								}
-							}
-						}
-					} else {
-						$ipInfoStr = "Key(s) not found in IP-Infos!";
-					}
-					//$ipInfoData = array_intersect_key($ipInfoData, array_flip($keys));
-				}
-			}		
-			$ipInfoStr = trim($ipInfoStr);
-			$ipInfoStr = trim($ipInfoStr,$delimiter);
-			return $ipInfoStr;
 		}
 
 
@@ -236,23 +110,22 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 
 			$startTime = microtime(true);
 			SetValue($this->GetIDForIdent("requestCnt"), GetValue($this->GetIDForIdent("requestCnt")) + 1); 
-
-			$this->sleekDBStore = \SleekDB\SleekDB::store('CacheIPStack', $this->sleekDbDir, $this->sleekDbConfig);
 			$ipStackArr = $this->sleekDBStore->findOneBy(["ip", "=", $ipAddress]);
 
 			if(is_null($ipStackArr)) {
 
-				if($this->ReadPropertyBoolean("ipStack_EnableAPI")) {
-					if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' not in Cache > Init 'ipstack.com' API request ...", $ipAddress), 0); }
-					$apiUrl = self::IPSTACK_API_URL_TEMPLATE;
+				$enableAPI = $this->ReadPropertyBoolean("EnableAPI");
+				if($enableAPI) {
+					if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' not in Cache > Init API request ...", $ipAddress), 0); }
+					$apiUrl = self::API_URL_TEMPLATE;
 					$apiUrl = str_replace("%%IP%%", $ipAddress, $apiUrl);
-					$apiUrl = str_replace("%%accessKey%%",  $this->ReadPropertyString("ipStack_accessKey"), $apiUrl);
+					$apiUrl = str_replace("%%accessKey%%",  $this->ReadPropertyString("access_key"), $apiUrl);
 					$ipStackJson = $this->RequestJsonData($apiUrl);
 					$ipStackArr = json_decode($ipStackJson, true);
 					$ipStackArr["TimeStamp"] = time();
 					$ipStackArr["DateTime"] = date('d.m.Y H:i:s',time());
 					$ipStackArr = $this->sleekDBStore->insert($ipStackArr);
-					$ipStackArr["source"] = "API";
+					$ipStackArr["method"] = "API";
 					SetValue($this->GetIDForIdent("requestCntAPI"), GetValue($this->GetIDForIdent("requestCntAPI")) + 1); 
 				} else {
 					$logMsg = "API calls are disabled. #Enable ipstack.com API Requests# in Modul Settings";
@@ -261,7 +134,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 				}
 			} else {
 				if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' found in Cache > return cached data ...", $ipAddress), 0); }
-				$ipStackArr["source"] = "DbCache";
+				$ipStackArr["method"] = "DbCache";
 				SetValue($this->GetIDForIdent("requestCntCache"), GetValue($this->GetIDForIdent("requestCntCache")) + 1); 
 			}
 
@@ -309,95 +182,6 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			return $ipStackStr;
 		}
 
-
-
-		public function GetMACadressInfo(string $macAddress) {
-
-			$startTime = microtime(true);
-			SetValue($this->GetIDForIdent("requestCnt"), GetValue($this->GetIDForIdent("requestCnt")) + 1); 
-
-			$this->sleekDBStore = \SleekDB\SleekDB::store('CacheMACaddress', $this->sleekDbDir, $this->sleekDbConfig);
-			$macArr = $this->sleekDBStore->findOneBy(["mac", "=", $macAddress]);
-
-			if(is_null($macArr)) {
-
-				if($this->ReadPropertyBoolean("macAddress_EnableAPI")) {
-					if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' not in Cache > Init 'macaddress.io' API request ...", $macAddress), 0); }
-					$apiUrl = self::MACADDRESS_API_URL_TEMPLATE;
-					$apiUrl = str_replace("%%mac%%", $macAddress, $apiUrl);
-					$apiUrl = str_replace("%%apiKey%%",  $this->ReadPropertyString("macAddress_accessKey"), $apiUrl);
-					$macAddressJson = $this->RequestJsonData($apiUrl);
-					$macArr = json_decode($macAddressJson, true);
-					$macArr["mac"] = $macAddress;
-					$macArr["TimeStamp"] = time();
-					$macArr["DateTime"] = date('d.m.Y H:i:s',time());
-					$macArr = $this->sleekDBStore->insert($macArr);
-					$macArr["source"] = "API";
-					SetValue($this->GetIDForIdent("requestCntAPI"), GetValue($this->GetIDForIdent("requestCntAPI")) + 1); 
-				} else {
-					$logMsg = "API calls are disabled. #Enable macaddress.io API Requests# in Modul Settings";
-					$this->AddLog(__FUNCTION__, "WARN :: " . $logMsg, 0, true);
-					die(json_encode(array('WARN' => $logMsg)));
-				}
-			} else {
-				if($this->logLevel >= LogLevel::DEBUG) { $this->AddLog(__FUNCTION__, sprintf("'%s' found in Cache > return cached data ...", $macAddress), 0); }
-				$macArr["source"] = "DbCache";
-				SetValue($this->GetIDForIdent("requestCntCache"), GetValue($this->GetIDForIdent("requestCntCache")) + 1); 
-			}
-
-			$macArr["duration_ms"] = $this->CalcDuration_ms($startTime);
-			return $macArr;
-		}
-
-		public function GetMACadressInfoAsString(string $macAddress, string $format, string $delimiter) {
-			$macInfoArr = $this->GetMACadressInfo($macAddress);
-			$macInfoStr = $delimiter;
-
-
-			if(array_key_exists("vendorDetails", $macInfoArr)) {
-				$vendorDataArr = $macInfoArr["vendorDetails"];
-
-				if($format == "ALL") {
-					$macInfoStr = $this->mapped_implode($delimiter, $vendorDataArr, ': ');
-				} else if($format == "json") {
-					$macInfoStr = json_encode($vendorDataArr);
-				} else if($format =="") {
-					$macInfoStr = sprintf("%s | %s - %s", $vendorDataArr["oui"], $vendorDataArr["countryCode"], $vendorDataArr["companyName"]);
-				} else {
-
-					if($format == "ValueOnly") {
-						$macInfoStr = implode($delimiter, $vendorDataArr);
-					} else {
-						$formatArr = explode(',', $format);
-						if(is_array($formatArr)) {
-							$whithKeys = !in_array("ValueOnly", $formatArr);
-							foreach($formatArr as $key) {
-								if(array_key_exists($key, $vendorDataArr)) {
-									//$macVendorInfo .= $key . ": " . $formatArr[$key] . " | ";
-									if($whithKeys) {
-										$macInfoStr .= sprintf("%s: %s%s", $key, $vendorDataArr[$key], $delimiter);
-									} else {
-										$macInfoStr .= sprintf("%s%s", $vendorDataArr[$key], $delimiter);
-									}
-								}
-							}
-						} else {
-							$macInfoStr = "Key(s) not found in IP-Infos!";
-						}
-						//$ipInfoData = array_intersect_key($ipInfoData, array_flip($keys));
-					}
-
-				}
-			
-				
-			} else {
-				$macVendmacInfoStrorInfo = "'vendorDetails' not found in Data  -> " . print_r($macInfoArr,true);
-			}
-			$macInfoStr = trim($macInfoStr);
-			$macInfoStr = trim($macInfoStr,$delimiter);
-			return $macInfoStr;
-		}
-
 		private function mapped_implode($glue, $array, $symbol = '=') {
 			return implode($glue, array_map(
 					function($k, $v) use($symbol, $glue) {
@@ -423,7 +207,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			SetValue($this->GetIDForIdent("lastAPIRequestDuration"), 0); 
 		}
 
-	    private function RegisterHook($webHook) {
+	    private function RegisterHook(string $webHook) {
 
 			if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Register Hook '%s'", $webHook), 0); }
 
@@ -456,7 +240,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			}
 		}
 
-		protected function UnregisterHook($webHook) {
+		protected function UnregisterHook(string $webHook) {
 
 			$ids = IPS_GetInstanceListByModuleID('{015A6EB8-D6E5-4B93-B496-0D3F77AE9FE1}');
 			if (count($ids) > 0) {
@@ -493,18 +277,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 				$this->AddLog(__FUNCTION__, $logMsg, 0); 
 			}
 
-			if(isset($_GET['GetIpInfo'])) {
-
-				$ip = $_GET['GetIpInfo'];
-				$format = "";
-				$delimiter = "|";
-
-				if(isset($_GET['format'])) { $format = $_GET['format']; }
-				if(isset($_GET['delimiter'])) { $delimiter = $_GET['delimiter']; }
-
-				echo $this->GetIPInfoAsString($ip, $format, $delimiter);
-
-			} else if(isset($_GET['GetIpStack'])) {
+			if(isset($_GET['GetIpStack'])) {
 
 				$ip = $_GET['GetIpStack'];
 				$format = "";
@@ -515,27 +288,15 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 
 				echo $this->GetIPStackAsString($ip, $format, $delimiter);
 
-			} else if(isset($_GET['GetMacVendor'])) {
-
-				$mac = $_GET['GetMacVendor'];
-				$format = "";
-				$delimiter = "|";
-
-				if(isset($_GET['format'])) { $format = $_GET['format']; }
-				if(isset($_GET['delimiter'])) { $delimiter = $_GET['delimiter']; }
-
-				echo $this->GetMACadressInfoAsString($mac, $format, $delimiter);
-				
-
 			} else {
-				echo 'WARN :: Request Parameter not defined!';
+				echo 'n.a.';
 			}
 
 			/* I N F O
 				https://github.com/1007/Symcon1007_Grafana/blob/master/Symcon1007%20Grafana/module.php
 				https://github.com/symcon/SymconMisc/blob/master/libs/WebHookModule.php
 
-				http://127.0.0.1:3777/hook/NetInfo?GetIpInfo=8.8.8.8&format=country,city,org&delimiter=|
+				http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=country,city,org&delimiter=|
 			*/
 	
 		}
@@ -562,27 +323,9 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			$this->RegisterVariableFloat("lastAPIRequestDuration", "Last API Request Duration [ms]", "", 940);	
 
 
-
-
-
 			$scriptFileSource = sprintf("<?php echo 'InstanceID is %s' ?>", $this->InstanceID);
 			$parentDirectory = dirname(__FILE__);
-			$scriptFile = $parentDirectory . '\TestScript_IpInfo.txt';
-			$file = @file_get_contents($scriptFile);
-			if($file === false) {
-				if($this->logLevel >= LogLevel::WARN) { $this->AddLog(__FUNCTION__, sprintf("Register minimal Test Script. File '%s' NOT exists", $scriptFile)); }
-				$scriptFileSource = sprintf('<?php $ipInfo = IPINFO_GetIPInfo(%s,"8.8.8.8"); var_dump($ipInfo); ?>', $this->InstanceID);				
-			} else {
-				if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Register Test Script > Source File Template '%s'", $scriptFile)); }
-				$scriptFileSource = str_replace("%%INSTANCE_ID%%", strval($this->InstanceID), $file);			
-			}
-			$this->RegisterScript("SampleReqIpInfo", "Sample Requests - ipinfo.io", $scriptFileSource, 990);
-
-
-
-			$scriptFileSource = sprintf("<?php echo 'InstanceID is %s' ?>", $this->InstanceID);
-			$parentDirectory = dirname(__FILE__);
-			$scriptFile = $parentDirectory . '\TestScript_IpStack.txt';
+			$scriptFile = $parentDirectory . '\TestScript.txt';
 			$file = @file_get_contents($scriptFile);
 			if($file === false) {
 				if($this->logLevel >= LogLevel::WARN) { $this->AddLog(__FUNCTION__, sprintf("Register minimal Test Script. File '%s' NOT exists", $scriptFile)); }
@@ -591,30 +334,13 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 				if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Register Test Script > Source File Template '%s'", $scriptFile)); }
 				$scriptFileSource = str_replace("%%INSTANCE_ID%%", strval($this->InstanceID), $file);			
 			}
-			$this->RegisterScript("SampleReqIpStack", "Sample Requests - ipstack.com", $scriptFileSource, 991);
-
-
-
-			$scriptFileSource = sprintf("<?php echo 'InstanceID is %s' ?>", $this->InstanceID);
-			$parentDirectory = dirname(__FILE__);
-			$scriptFile = $parentDirectory . '\TestScript_macAdressInfo.txt';
-			$file = @file_get_contents($scriptFile);
-			if($file === false) {
-				if($this->logLevel >= LogLevel::WARN) { $this->AddLog(__FUNCTION__, sprintf("Register minimal Test Script. File '%s' NOT exists", $scriptFile)); }
-				$scriptFileSource = sprintf('<?php $macAddress = NETINFO_GetMACadressInfo(%s,"d8:29:18:6c:23:b1"); var_dump($macAddress); ?>',$this->InstanceID);
-			} else {
-				if($this->logLevel >= LogLevel::INFO) { $this->AddLog(__FUNCTION__, sprintf("Register Test Script > Source File Template '%s'", $scriptFile)); }
-				$scriptFileSource = str_replace("%%INSTANCE_ID%%", strval($this->InstanceID), $file);			
-			}
-			$this->RegisterScript("SampleReqMacAdress", "Sample Requests - macaddress.io", $scriptFileSource, 992);
-
+			$this->RegisterScript("SampleRequests", "Sample Requests", $scriptFileSource, 990);
 
 			//IPS_ApplyChanges($this->archivInstanzID);
 			if($this->logLevel >= LogLevel::TRACE) { $this->AddLog(__FUNCTION__, "Variables registered", 0); }
-
 		}
 
-		protected function RequestJsonData($url) {
+		protected function RequestJsonData(string $url) {
 
 			$json = "";
 	
@@ -622,7 +348,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 
 			$startTime = microtime(true);
 			$streamContext = stream_context_create( array('https'=> array('timeout' => 5) ) ); //5 seconds
-			$json = file_get_contents($url, false, $streamContext);		// mayby use https://github.com/guzzle/guzzle
+			$json = file_get_contents($url, false, $streamContext);
 		
 			if ($json === false) {
 				$error = error_get_last();
@@ -653,7 +379,6 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 			$duration =  microtime(true)- $timeStart;
 			return round($duration*1000,2);
 		}	
-
 
 		protected function AddLog($name, $daten, $format=0, $enableIPSLogOutput=false) {
 			$this->logCnt++;

@@ -1,0 +1,27 @@
+<?php
+const INSTANCE_ID = %%INSTANCE_ID%%;
+
+echo "\n# Get countryCode and companyName for MAC Adress Vendor as String\n";
+echo NETINFO_GetMACadressInfoAsString(INSTANCE_ID, "44:38:39:ff:ef:57", "countryCode,companyName", "\n");
+
+echo "\n\n# Get  countryCode and companyName 'ValueOnly' for MAC Adress Vendor as String\n";
+echo NETINFO_GetMACadressInfoAsString(INSTANCE_ID, "44:38:39:ff:ef:57", "ValueOnly,countryCode,companyName", " - ");
+
+echo "\n\n# Get all MAC Adress Infos as String\n";
+echo NETINFO_GetMACadressInfoAsString(INSTANCE_ID, "44:38:39:ff:ef:57", "ALL", "\n");
+
+echo "\n\n# Get all MAC Adress Infos as Json String\n";
+echo NETINFO_GetMACadressInfoAsString(INSTANCE_ID, "44:38:39:ff:ef:57", "json", "x");
+
+echo "\n\n# Get all MAC Adress Infos as Array\n";
+$macAdressInfo = NETINFO_GetMACadressInfo(INSTANCE_ID,"44:38:39:ff:ef:57"); var_dump($macAdressInfo);
+
+
+/* Web Hook Requests
+
+* http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57
+* http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57&format=json
+
+*/
+
+?>
