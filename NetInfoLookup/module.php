@@ -11,7 +11,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 		const IPINFO_API_URL_TEMPLATE = 	"https://ipinfo.io/%%IP%%?token=%%TOKEN%%";
 		const IPSTACK_API_URL_TEMPLATE = 	"http://api.ipstack.com/%%IP%%?access_key=%%accessKey%%";
 		const MACADDRESS_API_URL_TEMPLATE = "https://api.macaddress.io/v1?apiKey=%%apiKey%%&output=json&search=%%mac%%";
-		const WEB_HOOK = 					"/hook/NetInfoLookup";		// >> http://127.0.0.1:3777/hook/NetInfoLookupLookup
+		const WEB_HOOK = 					"/hook/NetInfoLookup";		// >> http://127.0.0.1:3777/hook/NetInfoLookup
 
 		private $logLevel = 3;
 		private $logCnt = 0;
