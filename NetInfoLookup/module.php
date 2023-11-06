@@ -6,12 +6,12 @@ declare(strict_types=1);
 require_once __DIR__ . '/../libs/COMMON.php'; 
 require_once __DIR__ . '/../libs/SleekDB/SleekDB.php'; 
 
-	class NetInfo extends IPSModule {
+	class NetInfoLookup extends IPSModule {
 
 		const IPINFO_API_URL_TEMPLATE = 	"https://ipinfo.io/%%IP%%?token=%%TOKEN%%";
 		const IPSTACK_API_URL_TEMPLATE = 	"http://api.ipstack.com/%%IP%%?access_key=%%accessKey%%";
 		const MACADDRESS_API_URL_TEMPLATE = "https://api.macaddress.io/v1?apiKey=%%apiKey%%&output=json&search=%%mac%%";
-		const WEB_HOOK = "/hook/NetInfo";	// >> http://127.0.0.1:3777/hook/NetInfo
+		const WEB_HOOK = 					"/hook/NetInfoLookup";		// >> http://127.0.0.1:3777/hook/NetInfoLookupLookup
 
 		private $logLevel = 3;
 		private $logCnt = 0;
@@ -535,7 +535,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 				https://github.com/1007/Symcon1007_Grafana/blob/master/Symcon1007%20Grafana/module.php
 				https://github.com/symcon/SymconMisc/blob/master/libs/WebHookModule.php
 
-				http://127.0.0.1:3777/hook/NetInfo?GetIpInfo=8.8.8.8&format=country,city,org&delimiter=|
+				http://127.0.0.1:3777/hook/NetInfoLookup?GetIpInfo=8.8.8.8&format=country,city,org&delimiter=|
 			*/
 	
 		}

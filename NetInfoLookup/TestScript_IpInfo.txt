@@ -1,9 +1,5 @@
-# IP Info Module
-Beschreibung des Moduls.
-
-
-
-### 1. Funktionsumfang
+<?php
+const INSTANCE_ID = %%INSTANCE_ID%%;
 
 echo "\n# Get hostname and country for IP as String\n";
 echo NETINFO_GetIPInfoAsString(INSTANCE_ID, "8.8.8.8", "hostname,country", "\n");
@@ -37,5 +33,4 @@ IPv6
 
 */
 
-Rate Limits
-Free usage of our API is limited to 50,000 API requests per month. If you exceed that limit, we'll return a 429 HTTP status code to you.
+?>

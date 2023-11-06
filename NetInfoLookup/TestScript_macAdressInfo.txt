@@ -19,8 +19,8 @@ $macAdressInfo = NETINFO_GetMACadressInfo(INSTANCE_ID,"44:38:39:ff:ef:57"); var_
 
 /* Web Hook Requests
 
-* http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57
-* http://127.0.0.1:3777/hook/NetInfo?GetMacVendor=44:38:39:ff:ef:57&format=json
+* http://127.0.0.1:3777/hook/NetInfoLookupLookup?GetMacVendor=44:38:39:ff:ef:57
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetMacVendor=44:38:39:ff:ef:57&format=json
 
 */
 

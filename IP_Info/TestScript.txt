@@ -30,7 +30,7 @@ IPv4
 * http://127.0.0.1:3777/hook/NetIpInfo?GetIpInfo=8.8.8.8&format=json
 
 IPv6
-* http://127.0.0.1:3777/hook/NetInfo?GetIpInfo=2001:4860:4860::8888&format=ALL&delimiter=;%20
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpInfo=2001:4860:4860::8888&format=ALL&delimiter=;%20
 
 */
 

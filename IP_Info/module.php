@@ -10,7 +10,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 	{
 
 		const API_URL_TEMPLATE = "https://ipinfo.io/%%IP%%?token=%%TOKEN%%";
-		const WEB_HOOK = "/hook/NetIpInfo";		// >> http://127.0.0.1:3777/hook/NetInfo
+		const WEB_HOOK = "/hook/NetIpInfo";		// >> http://127.0.0.1:3777/hook/NetInfoLookup
 
 		private $logLevel = 3;
 		private $logCnt = 0;
@@ -303,7 +303,7 @@ require_once __DIR__ . '/../libs/SleekDB/SleekDB.php';
 				https://github.com/1007/Symcon1007_Grafana/blob/master/Symcon1007%20Grafana/module.php
 				https://github.com/symcon/SymconMisc/blob/master/libs/WebHookModule.php
 
-				http://127.0.0.1:3777/hook/NetInfo?GetIpInfo=8.8.8.8&format=country,city,org&delimiter=|
+				http://127.0.0.1:3777/hook/NetInfoLookup?GetIpInfo=8.8.8.8&format=country,city,org&delimiter=|
 			*/
 	
 		}

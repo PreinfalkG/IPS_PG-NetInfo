@@ -16,11 +16,11 @@ $ipInfo = NETINFO_GetIPStack(INSTANCE_ID,"8.8.8.8"); var_dump($ipInfo);
 
 /* Web Hook Requests
 
-* http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=region_name&delimiter=;%20
-* http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=country_code,country_name,continent_name&delimiter=;%20 
-* http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=latitude,longitude&delimiter=;%20 
-* http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=json&delimiter=;%20
-* http://127.0.0.1:3777/hook/NetInfo?GetIpStack=8.8.8.8&format=location&delimiter=;%20
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpStack=8.8.8.8&format=region_name&delimiter=;%20
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpStack=8.8.8.8&format=country_code,country_name,continent_name&delimiter=;%20 
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpStack=8.8.8.8&format=latitude,longitude&delimiter=;%20 
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpStack=8.8.8.8&format=json&delimiter=;%20
+* http://127.0.0.1:3777/hook/NetInfoLookup?GetIpStack=8.8.8.8&format=location&delimiter=;%20
 
 */
 

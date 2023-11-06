@@ -3,7 +3,7 @@
     "name": "IP Info",
     "type": 3,
     "vendor": "ipinfo.io API",
-    "aliases": ["Network IP Info"],
+    "aliases": ["IP Info Lookup"],
     "parentRequirements": [],
     "childRequirements": [],
     "implemented": [],
