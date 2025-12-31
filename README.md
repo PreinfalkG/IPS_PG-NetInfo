@@ -36,3 +36,4 @@ function MC_ReloadModule(int $InstanceID, string $Module) { return true; }
 function MC_RevertModule(int $InstanceID, string $Module) { return true; }
 function MC_UpdateModule(int $InstanceID, string $Module) { return true; }
 function MC_UpdateModuleRepositoryBranch(int $InstanceID, string $Module, string $Branch) { return true; }
+.
